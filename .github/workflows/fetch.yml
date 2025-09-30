@@ -2,22 +2,22 @@ name: Fetch OpenPhish Feed
 
 on:
   schedule:
-    - cron: "0 */12 * * *"   # 每 12 小時執行一次（UTC）
-  workflow_dispatch:         # 可手動觸發測試
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # 允許 push
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Fetch feed
         run: |
           mkdir -p data
           curl -s "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt" -o "data/feed_$(date +'%Y%m%d_%H%M%S').txt"
-          echo "Saved to data/"
 
       - name: Commit changes
         run: |
@@ -26,3 +26,5 @@ jobs:
           git add data/
           git commit -m "Auto update feed $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
