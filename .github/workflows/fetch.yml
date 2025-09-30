@@ -2,29 +2,41 @@ name: Fetch OpenPhish Feed
 
 on:
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "0 0,10,20 * * *"  # UTC，每天 00:00 / 10:00 / 20:00
   workflow_dispatch:
 
 permissions:
-  contents: write   # 允許 push
+  contents: write   # 允許 workflow push
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Fetch feed
+      - name: Fetch feed to temp
         run: |
-          mkdir -p data
-          curl -s "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt" -o "data/feed_$(date +'%Y%m%d_%H%M%S').txt"
+          mkdir -p tmp data
+          curl -s "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt" -o "tmp/feed.txt"
 
-      - name: Commit changes
+      - name: Check if feed changed and commit if new
         run: |
+          # 找出最新一個存檔
+          latest=$(ls -t data/feed_*.txt 2>/dev/null | head -n1)
+          if [ -f "$latest" ]; then
+            cmp -s tmp/feed.txt "$latest"
+            if [ $? -eq 0 ]; then
+              echo "Feed is identical to latest, skip commit."
+              exit 0
+            fi
+          fi
+          # 不同就存成新檔案
+          mv tmp/feed.txt data/feed_$(date +'%Y%m%d_%H%M%S').txt
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git commit -m "Auto update feed $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git commit -m "Auto update feed $(date +'%Y-%m-%d %H:%M:%S')" 
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
