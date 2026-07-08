@@ -47,18 +47,23 @@ https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt
 
 ## 資料保存
 
-每次同步會建立時間戳記快照：
+每次同步會建立時間戳記快照（Historical Snapshot），並依照月份分類保存：
 
 ```
 data/
-├── feed_YYYYMMDD_HHMMSS.txt
-└── ...
+├── YYYY-MM/
+│   ├── feed_YYYYMMDD_HHMMSS.txt
+│   └── ...
 ```
 
 範例：
 
 ```
-data/feed_20260708_080000.txt
+data/
+└── 2026-07/
+    ├── feed_20260708_080000.txt
+    ├── feed_20260708_200000.txt
+    └── ...
 ```
 
 ## 使用情境
